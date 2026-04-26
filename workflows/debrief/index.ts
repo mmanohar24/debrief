@@ -1,7 +1,11 @@
 import { sleep, createHook } from "workflow";
 import { generateObject } from "ai";
-import { gateway } from "@ai-sdk/gateway";
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
+
+const anthropicModel = createAnthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+})("claude-sonnet-4-6");
 
 const MeetingExtractionSchema = z.object({
   summary: z.string().describe("2-3 sentence meeting summary"),
@@ -18,8 +22,6 @@ const MeetingExtractionSchema = z.object({
   openQuestions: z.array(z.string()),
   meetingEfficiencyScore: z
     .number()
-    .min(0)
-    .max(100)
     .describe("0-100 score: were decisions made, was time well spent?"),
   scoreRationale: z.string().describe("One sentence explaining the score"),
   recurringTopics: z
@@ -44,10 +46,11 @@ export interface DebriefInput {
 
 async function extractMeetingData(input: DebriefInput): Promise<MeetingExtraction> {
   "use step";
-  const result = await generateObject({
-    model: gateway("anthropic/claude-sonnet-4-6"),
-    schema: MeetingExtractionSchema,
-    prompt: `You are an expert meeting analyst. Extract all action items, decisions, and key information.
+  try {
+    const result = await generateObject({
+      model: anthropicModel,
+      schema: MeetingExtractionSchema,
+      prompt: `You are an expert meeting analyst. Extract all action items, decisions, and key information.
 Also score meeting efficiency (0-100): 100 = clear decisions made, owners assigned, time well spent. 0 = no decisions, vague outcomes, circular discussion.
 Flag any topics that sound like they keep coming up without resolution.
 
@@ -55,8 +58,12 @@ Meeting Title: ${input.meetingTitle}
 Attendees: ${input.attendees.join(", ")}
 Transcript:
 ${input.transcript}`,
-  });
-  return result.object;
+    });
+    return result.object;
+  } catch (err) {
+    console.error("[extractMeetingData] generateObject failed:", err);
+    throw err;
+  }
 }
 
 async function storeExtractionForReview(

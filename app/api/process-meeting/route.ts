@@ -20,5 +20,11 @@ export async function POST(req: NextRequest) {
     },
   ]);
 
-  return NextResponse.json({ runId, workflowRunId: workflowRun.runId, status: "started" });
+  // workflowRun.runId is the WDK-assigned ID (wrun_...) used for status polling.
+  // runId (uuid) is our hook token seed, returned as hookId for the review gate.
+  return NextResponse.json({
+    runId: workflowRun.runId,
+    hookId: runId,
+    status: "started",
+  });
 }
