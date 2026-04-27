@@ -121,3 +121,72 @@ bg-[#0D0F0E] font-mono text-[#00E87A] rounded-[6px] p-4
 8. Motion only communicates state change. No decorative animations.
 9. Left-align all body content. Center-align only for empty states.
 10. When in doubt, check DESIGN.md.
+
+---
+
+## Technical Architecture
+
+### AI Provider
+- Package: `@ai-sdk/anthropic` — `createAnthropic`
+- Model: `claude-sonnet-4-6`
+- Env var: `ANTHROPIC_API_KEY`
+- Initialized once at module level in `workflows/debrief/index.ts` as `anthropicModel`
+
+### Environment Variables
+```
+ANTHROPIC_API_KEY        # Anthropic direct API
+NOTION_API_KEY           # Notion Integration Token (Bearer)
+NOTION_PAGE_ID           # Target Notion database ID for task creation
+GOOGLE_ACCESS_TOKEN      # OAuth access token for Calendar + Gmail MCP calls
+GRANOLA_API_KEY          # Granola MCP Bearer token
+SLACK_BOT_TOKEN          # Slack MCP Bearer token
+NEXT_PUBLIC_BASE_URL     # Full origin URL (e.g. http://localhost:3000) — used by WDK steps for internal fetch calls
+```
+
+### Notion — Direct REST API (not MCP)
+Notion MCP requires OAuth that isn't set up. All Notion calls use the REST API directly.
+
+- Endpoint: `https://api.notion.com/v1/pages`
+- Headers: `Authorization: Bearer ${NOTION_API_KEY}`, `Notion-Version: 2022-06-28`
+- **Exact database schema** (4 properties, no others):
+  - `Owner` — `title` type — holds the **task title** (primary field, required by Notion)
+  - `Due Date` — `date` type — `{ start: "YYYY-MM-DD" }`, always strip time component
+  - `Priority` — `select` type — values: `high`, `medium`, `low`
+  - `Meeting` — `rich_text` type — meeting title string
+
+### MCP Helper
+`lib/mcp.ts` exports `callMCP(serverUrl, toolName, args, token)` — JSON-RPC 2.0 wrapper.
+Use for: Calendar (`https://calendarmcp.googleapis.com/mcp/v1`), Gmail (`https://gmailmcp.googleapis.com/mcp/v1`), Granola (`https://mcp.granola.ai/mcp`), Slack (`https://mcp.slack.com/mcp`).
+Do **not** use for Notion (direct REST instead).
+
+### WDK Run Status
+`getRun(runId).status` resolves to: `"pending" | "running" | "completed" | "failed" | "cancelled"`
+There is no `"paused"` or `"waiting"` status — the run stays `"running"` while `createHook` waits.
+Detect the Review Gate state by checking the review store (`/api/review/store?runId=`) for extraction data.
+
+### Run Page URL Structure
+`/run/[runId]?h=[hookId]`
+- `runId` — WDK-assigned run ID (e.g. `wrun_…`), used for `/api/workflow-status/[runId]`
+- `hookId` — UUID generated at submit time, used for `/api/review/store` and `/api/review/approve`
+Both IDs are returned by `/api/process-meeting` as `{ runId, hookId }`.
+
+### Font CSS Variables
+- `--font-jetbrains-mono` — headings, labels, status, code, buttons
+- `--font-inter` — body copy and prose only
+Loaded in `app/layout.tsx` via `next/font/google`.
+
+### What Is Built (Day 4 complete)
+- `workflows/debrief/index.ts` — full WDK workflow with extraction, review gate, dispatch steps, 48hr sleep
+- `app/page.tsx` — home page with demo helpers, Obsidian Terminal design
+- `app/run/[runId]/page.tsx` — live dashboard with step tracker, ScoreCard, ReviewGate
+- `components/ScoreCard.tsx`, `components/ReviewGate.tsx`
+- `/api/process-meeting`, `/api/workflow-status/[runId]`, `/api/review/store`, `/api/review/approve`
+- `/api/mcp/notion/create-task` (REST), `/api/mcp/calendar/create-event`, `/api/mcp/gmail/create-draft`
+- `/api/mcp/granola/search`, `/api/patterns/check`
+- `lib/mcp.ts` — shared MCP helper
+
+### Still To Build
+- `/api/mcp/slack/post-summary`
+- `/api/mcp/notion/get-task` (for 48hr follow-up check)
+- Pre-meeting briefing workflow + cron trigger
+- History page (`app/history/page.tsx`)
