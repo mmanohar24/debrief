@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { callMCP } from "@/lib/mcp";
 
 type ActionItem = { title: string; owner?: string; dueDate?: string; priority?: string };
 type Tone = "internal" | "client" | "executive";
@@ -126,12 +125,35 @@ export async function POST(req: NextRequest) {
         openQuestions: openQuestions ?? [],
       });
 
-  const result = await callMCP(
-    "https://gmailmcp.googleapis.com/mcp/v1",
-    "create_draft",
-    { to, subject, body },
-    token
-  );
+  const rawEmail = [
+    `To: ${to}`,
+    `Subject: ${subject}`,
+    `Content-Type: text/plain; charset=UTF-8`,
+    ``,
+    body,
+  ].join("\r\n");
 
-  return NextResponse.json(result);
+  const encoded = Buffer.from(rawEmail)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+
+  const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/drafts", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ message: { raw: encoded } }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    const errorText = JSON.stringify(data);
+    return NextResponse.json({ error: errorText }, { status: res.status });
+  }
+
+  return NextResponse.json({ draftId: data.id });
 }
