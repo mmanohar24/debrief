@@ -97,6 +97,39 @@ function buildReminderBody(incompleteTasks: unknown[]): string {
   ].join("\n");
 }
 
+async function getGoogleAccessToken(): Promise<string> {
+  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+  if (!refreshToken || !clientId || !clientSecret) {
+    throw new Error(
+      "Missing Google OAuth credentials: GOOGLE_REFRESH_TOKEN, GOOGLE_CLIENT_ID, and GOOGLE_CLIENT_SECRET are all required"
+    );
+  }
+
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+      client_id: clientId,
+      client_secret: clientSecret,
+    }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok || !data.access_token) {
+    throw new Error(
+      `Failed to refresh Google access token: ${data.error_description ?? data.error ?? JSON.stringify(data)}`
+    );
+  }
+
+  return data.access_token as string;
+}
+
 export async function POST(req: NextRequest) {
   const {
     to,
@@ -110,9 +143,12 @@ export async function POST(req: NextRequest) {
     incompleteTasks,
   } = await req.json();
 
-  const token = process.env.GOOGLE_ACCESS_TOKEN;
-  if (!token) {
-    return NextResponse.json({ error: "GOOGLE_ACCESS_TOKEN not configured" }, { status: 503 });
+  let token: string;
+  try {
+    token = await getGoogleAccessToken();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: message }, { status: 503 });
   }
 
   const body = isReminder

@@ -90,8 +90,10 @@ export default function Home() {
   const [transcript, setTranscript] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [recipientEmail, setRecipientEmail] = useState("");
   const [titleFocused, setTitleFocused] = useState(false);
   const [transcriptFocused, setTranscriptFocused] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -102,7 +104,13 @@ export default function Home() {
       const res = await fetch("/api/process-meeting", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ meetingTitle, transcript, attendees: [] }),
+        body: JSON.stringify({
+          meetingTitle,
+          transcript,
+          attendees: [],
+          recipientEmail: recipientEmail || undefined,
+          slackChannelId: process.env.NEXT_PUBLIC_DEFAULT_SLACK_CHANNEL_ID,
+        }),
       });
 
       if (!res.ok) throw new Error(`API error: ${res.status}`);
@@ -273,6 +281,45 @@ export default function Home() {
                 }}
               >
                 Paste a raw transcript or use the demo buttons to try a pre-loaded example.
+              </p>
+            </div>
+
+            {/* Recipient Email */}
+            <div>
+              <label
+                htmlFor="recipientEmail"
+                style={{ ...labelStyle, display: "block", marginBottom: "8px" }}
+              >
+                Recipient Email
+                <span style={{ ...mono, color: "#4A5A4A", marginLeft: "8px", fontWeight: 400 }}>
+                  (optional)
+                </span>
+              </label>
+              <input
+                id="recipientEmail"
+                type="email"
+                value={recipientEmail}
+                onChange={(e) => setRecipientEmail(e.target.value)}
+                onFocus={() => setEmailFocused(true)}
+                onBlur={() => setEmailFocused(false)}
+                placeholder="e.g. team@company.com"
+                style={{
+                  ...sans,
+                  display: "block",
+                  width: "100%",
+                  backgroundColor: "#111311",
+                  color: "#E8EDE8",
+                  border: inputBorder(emailFocused),
+                  borderRadius: "4px",
+                  padding: "10px 14px",
+                  fontSize: "0.875rem",
+                  outline: "none",
+                  boxSizing: "border-box",
+                  transition: "border-color 120ms ease-out",
+                }}
+              />
+              <p style={{ ...sans, fontSize: "0.75rem", color: "#4A5A4A", marginTop: "6px" }}>
+                A Gmail draft recap will be created for this address.
               </p>
             </div>
 

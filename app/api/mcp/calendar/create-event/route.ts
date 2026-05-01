@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { callMCP } from "@/lib/mcp";
 
 export async function POST(req: NextRequest) {
   const { title, date, attendees, description } = await req.json();
@@ -12,20 +11,32 @@ export async function POST(req: NextRequest) {
   // Use all-day event format when only a date (no time) is supplied.
   const dateValue = (date as string | undefined)?.split("T")[0] ?? "";
 
-  const result = await callMCP(
-    "https://calendarmcp.googleapis.com/mcp/v1",
-    "create_event",
+  const res = await fetch(
+    "https://www.googleapis.com/calendar/v3/calendars/primary/events",
     {
-      summary: title,
-      description: description ?? "",
-      start: { date: dateValue },
-      end: { date: dateValue },
-      attendees: Array.isArray(attendees)
-        ? (attendees as string[]).map((email) => ({ email }))
-        : [],
-    },
-    token
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        summary: title,
+        description: description ?? "",
+        start: { date: dateValue },
+        end: { date: dateValue },
+        attendees: Array.isArray(attendees)
+          ? (attendees as string[]).map((email) => ({ email }))
+          : [],
+      }),
+    }
   );
 
-  return NextResponse.json(result);
+  const data = await res.json();
+
+  if (!res.ok) {
+    const errorText = JSON.stringify(data);
+    return NextResponse.json({ error: errorText }, { status: res.status });
+  }
+
+  return NextResponse.json({ eventId: data.id });
 }

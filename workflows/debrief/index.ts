@@ -285,22 +285,34 @@ export async function debriefWorkflow(input: DebriefInput) {
     input.notionPageId
   );
 
-  // Step 4: Add Calendar follow-up event
-  await createCalendarEvent(approvedExtraction, input.meetingTitle, input.attendees);
-
-  // Step 5: Draft tone-aware Gmail recap
-  if (input.recipientEmail) {
-    await draftGmailRecap(
-      approvedExtraction,
-      input.meetingTitle,
-      input.recipientEmail,
-      input.emailTone ?? "internal"
-    );
+  // Step 4: Add Calendar follow-up event (non-fatal)
+  try {
+    await createCalendarEvent(approvedExtraction, input.meetingTitle, input.attendees);
+  } catch (err) {
+    console.error("[debriefWorkflow] createCalendarEvent failed, continuing:", err);
   }
 
-  // Step 6: Post Slack summary
+  // Step 5: Draft tone-aware Gmail recap (non-fatal)
+  if (input.recipientEmail) {
+    try {
+      await draftGmailRecap(
+        approvedExtraction,
+        input.meetingTitle,
+        input.recipientEmail,
+        input.emailTone ?? "internal"
+      );
+    } catch (err) {
+      console.error("[debriefWorkflow] draftGmailRecap failed, continuing:", err);
+    }
+  }
+
+  // Step 6: Post Slack summary (non-fatal)
   if (input.slackChannelId) {
-    await postSlackSummary(approvedExtraction, input.meetingTitle, input.slackChannelId);
+    try {
+      await postSlackSummary(approvedExtraction, input.meetingTitle, input.slackChannelId);
+    } catch (err) {
+      console.error("[debriefWorkflow] postSlackSummary failed, continuing:", err);
+    }
   }
 
   // Step 7: Detect recurring patterns across past meetings
