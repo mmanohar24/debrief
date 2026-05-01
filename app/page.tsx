@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 
 const DEMO_TITLE = "Q2 Planning Meeting";
 
-const DEMO_TRANSCRIPT = `Q2 Planning Meeting — April 25, 2026
+const DEMO_TRANSCRIPT = `Q2 Planning Meeting — May 4, 2026
 Attendees: Sarah (PM), Mike (Engineering), Alex (Design), Jordan (Marketing), Chris (Finance)
 
 [00:00] Sarah: Alright everyone, let's get started. We have a lot to cover — feature scoping for Q2, the launch timeline, and we need to finally resolve the budget question that has been sitting open for three meetings now.
@@ -24,9 +24,9 @@ Attendees: Sarah (PM), Mike (Engineering), Alex (Design), Jordan (Marketing), Ch
 
 [02:35] Mike: I'll assign it to Jamie. Confirmed by Friday.
 
-[03:00] Jordan: I need the feature list locked by May 1st to start the launch campaign. If anything slips past that, we lose the press window we've been building toward.
+[03:00] Jordan: I need the feature list locked by May 8th to start the launch campaign. If anything slips past that, we lose the press window we've been building toward.
 
-[03:30] Sarah: May 1st feature lock is confirmed. That's a decision. Chris — can we proceed with planned spend and get retroactive approval on the budget?
+[03:30] Sarah: May 8th feature lock is confirmed. That's a decision. Chris — can we proceed with planned spend and get retroactive approval on the budget?
 
 [04:00] Chris: I've raised this with finance three times and I'm not getting a response. We need to escalate to VP level. The budget approval is blocking the contractor work on the data pipeline.
 
@@ -36,9 +36,9 @@ Attendees: Sarah (PM), Mike (Engineering), Alex (Design), Jordan (Marketing), Ch
 
 [05:00] Jordan: Analytics was in the launch deck. That would be a significant change.
 
-[05:15] Sarah: Provisional decision — analytics stays in Q2 scope. If budget isn't resolved by April 30th, we de-scope it and Jordan adjusts launch messaging. Jordan, draft two versions of launch copy — one with analytics, one without.
+[05:15] Sarah: Provisional decision — analytics stays in Q2 scope. If budget isn't resolved by May 12th, we de-scope it and Jordan adjusts launch messaging. Jordan, draft two versions of launch copy — one with analytics, one without.
 
-[05:45] Jordan: I'll have both versions ready by April 28th.
+[05:45] Jordan: I'll have both versions ready by May 7th.
 
 [06:00] Alex: I want to flag the onboarding flow. We got user research back showing a 40% drop-off at step 3. I'd like to include a quick fix in Q2.
 
@@ -46,9 +46,9 @@ Attendees: Sarah (PM), Mike (Engineering), Alex (Design), Jordan (Marketing), Ch
 
 [06:30] Mike: Three days if Alex gives me a scoped design.
 
-[06:45] Sarah: Decision — we include the onboarding fix. Alex, deliver a scoped design by April 27th. Mike, schedule it in.
+[06:45] Sarah: Decision — we include the onboarding fix. Alex, deliver a scoped design by May 7th. Mike, schedule it in.
 
-[07:00] Chris: The vendor contract for analytics infrastructure is up for renewal May 5th. Someone needs to sign off. It's $45k annually.
+[07:00] Chris: The vendor contract for analytics infrastructure is up for renewal May 16th. Someone needs to sign off. It's $45k annually.
 
 [07:20] Sarah: Chris, send the contract to me and Jordan today. We'll review and decide on renewal.
 
@@ -62,11 +62,15 @@ Attendees: Sarah (PM), Mike (Engineering), Alex (Design), Jordan (Marketing), Ch
 
 [08:20] Sarah: Explicit milestone — mobile auth done by May 8th. Mike owns it.
 
-[08:30] Sarah: Recap: Alex sends Figma link today. Mike assigns mobile auth to Jamie by Friday. Sarah escalates budget to VP Finance tomorrow. Jordan drafts two launch messaging versions by April 28th. Alex delivers scoped onboarding design by April 27th. Chris sends vendor contract to Sarah and Jordan today. Follow-up call May 2nd. Any questions?
+[08:30] Sarah: Recap: Alex sends Figma link today. Mike assigns mobile auth to Jamie by Friday. Sarah escalates budget to VP Finance tomorrow. Jordan drafts two launch messaging versions by May 7th. Alex delivers scoped onboarding design by May 7th. Chris sends vendor contract to Sarah and Jordan today. Follow-up call May 14th. Any questions?
 
 [09:00] Mike: Just confirming — data pipeline contractor work is still blocked pending budget resolution?
 
-[09:10] Sarah: Correct. That's the one open dependency. Let's close there.`;
+[09:10] Sarah: Correct. That's the one open dependency. Let's close there.
+
+[09:20] Jordan: Before we wrap — can we schedule a follow-up meeting for May 15th, 2026 to review launch readiness across all teams?
+
+[09:25] Sarah: Agreed. Let's put a follow-up meeting on the calendar for May 15, 2026. I'll send the invite.`;
 
 // ── Shared style tokens ────────────────────────────────────────────────────────
 
