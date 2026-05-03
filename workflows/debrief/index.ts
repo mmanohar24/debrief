@@ -68,13 +68,14 @@ ${input.transcript}`,
 
 async function storeExtractionForReview(
   runId: string,
-  extraction: MeetingExtraction
+  extraction: MeetingExtraction,
+  meetingTitle: string
 ): Promise<void> {
   "use step";
   await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/review/store`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ runId, extraction }),
+    body: JSON.stringify({ runId, extraction, meetingTitle }),
   });
 }
 
@@ -272,7 +273,7 @@ export async function debriefWorkflow(input: DebriefInput) {
 
   // Step 2: REVIEW GATE — store extraction, then pause until frontend approves.
   // The approve route calls resumeHook with the deterministic token below.
-  await storeExtractionForReview(input.runId, extraction);
+  await storeExtractionForReview(input.runId, extraction, input.meetingTitle);
   const reviewHook = createHook<MeetingExtraction>({
     token: `review-${input.runId}`,
   });

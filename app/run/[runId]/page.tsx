@@ -284,6 +284,147 @@ function RunStatusBadge({ status }: { status: RunStatus | null }) {
   return null;
 }
 
+// ── Results Panel ──────────────────────────────────────────────────────────
+
+function ResultCard({
+  label,
+  statusText,
+  previewLines,
+  linkHref,
+  linkLabel,
+  skipped,
+}: {
+  label: string;
+  statusText: string;
+  previewLines?: string[];
+  linkHref?: string;
+  linkLabel?: string;
+  skipped?: boolean;
+}) {
+  return (
+    <div
+      className="rounded-[6px] flex flex-col gap-3 p-4"
+      style={{ backgroundColor: "#1A1F1A", border: "1px solid #1E3A1E" }}
+    >
+      <p
+        className="uppercase tracking-[0.06em]"
+        style={{
+          fontFamily: "var(--font-jetbrains-mono)",
+          fontSize: "0.7rem",
+          fontWeight: 500,
+          color: skipped ? "#8A9A8A" : "#00E87A",
+        }}
+      >
+        {skipped ? "— " : "✓ "}
+        {label}
+      </p>
+      <p
+        style={{
+          fontFamily: "var(--font-jetbrains-mono)",
+          fontSize: "0.8rem",
+          color: skipped ? "#8A9A8A" : "#E8EDE8",
+        }}
+      >
+        {statusText}
+      </p>
+      {previewLines && previewLines.length > 0 && (
+        <ul className="space-y-1">
+          {previewLines.map((line, i) => (
+            <li
+              key={i}
+              className="text-[#8A9A8A]"
+              style={{ fontFamily: "var(--font-inter)", fontSize: "0.8rem" }}
+            >
+              · {line}
+            </li>
+          ))}
+        </ul>
+      )}
+      {linkHref && linkLabel && (
+        <a
+          href={linkHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-auto inline-block self-start"
+          style={{
+            fontFamily: "var(--font-jetbrains-mono)",
+            fontSize: "0.7rem",
+            fontWeight: 500,
+            color: "#F5A623",
+            border: "1px solid #F5A623",
+            borderRadius: "4px",
+            padding: "6px 12px",
+            textDecoration: "none",
+          }}
+        >
+          {linkLabel}
+        </a>
+      )}
+    </div>
+  );
+}
+
+function ResultsPanel({
+  extraction,
+  meetingTitle,
+}: {
+  extraction: MeetingExtraction;
+  meetingTitle: string;
+}) {
+  const taskCount = extraction.actionItems.length;
+  const previewTasks = extraction.actionItems.slice(0, 3).map((item) => item.title);
+  const emailSubject = `Meeting Recap: ${meetingTitle}`;
+  const slackPreview = extraction.summary.split(/(?<=[.!?])\s/)[0] ?? extraction.summary;
+  const hasFollowUp = !!extraction.followUpDate;
+
+  return (
+    <div className="rounded-[6px] border border-[#242824] p-5" style={{ backgroundColor: "#161916" }}>
+      <p
+        className="uppercase tracking-[0.06em] text-[#8A9A8A] mb-4"
+        style={{ fontFamily: "var(--font-jetbrains-mono)", fontSize: "0.7rem", fontWeight: 500 }}
+      >
+        Results
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <ResultCard
+          label="Notion Tasks"
+          statusText={`${taskCount} task${taskCount !== 1 ? "s" : ""} created`}
+          previewLines={previewTasks}
+          linkHref="https://www.notion.so/mmanohar24/Debrief-Hackathon-34eec61d6c2d8037acc2c7090a1907b5"
+          linkLabel="View in Notion →"
+        />
+        <ResultCard
+          label="Gmail Draft"
+          statusText="Draft created"
+          previewLines={[emailSubject]}
+          linkHref="https://mail.google.com/mail/u/0/#drafts"
+          linkLabel="Open in Gmail →"
+        />
+        <ResultCard
+          label="Slack"
+          statusText="Posted to channel"
+          previewLines={[slackPreview]}
+          linkHref="https://app.slack.com"
+          linkLabel="View in Slack →"
+        />
+        {hasFollowUp ? (
+          <ResultCard
+            label="Calendar"
+            statusText="Event created"
+            previewLines={[`Follow-up: ${extraction.followUpDate}`]}
+          />
+        ) : (
+          <ResultCard
+            label="Calendar"
+            statusText="Skipped — no follow-up date"
+            skipped
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Dispatched state card ──────────────────────────────────────────────────
 
 function DispatchedCard({ extraction }: { extraction: MeetingExtraction }) {
@@ -350,6 +491,7 @@ function RunDashboard() {
 
   const [runStatus, setRunStatus] = useState<RunStatus | null>(null);
   const [extraction, setExtraction] = useState<MeetingExtraction | null>(null);
+  const [meetingTitle, setMeetingTitle] = useState<string>("");
   const [approved, setApproved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -390,6 +532,7 @@ function RunDashboard() {
         const data = await res.json();
         if (data.extraction) {
           setExtraction(data.extraction as MeetingExtraction);
+          if (data.meetingTitle) setMeetingTitle(data.meetingTitle as string);
         }
       } catch {
         // ignore
@@ -524,6 +667,11 @@ function RunDashboard() {
           {/* Dispatched card — shown after approval */}
           {showDispatched && extraction && !showCompleted && (
             <DispatchedCard extraction={extraction} />
+          )}
+
+          {/* Results panel — shown after approval */}
+          {showDispatched && extraction && !showCompleted && (
+            <ResultsPanel extraction={extraction} meetingTitle={meetingTitle} />
           )}
 
           {/* Completed card */}
