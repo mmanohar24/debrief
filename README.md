@@ -127,4 +127,4 @@ lib/
 
 ## Demo
 
-[Watch the 56 second demo](https://youtu.be/bbxYsZLYSuU)
+[Watch the demo](https://youtu.be/bbxYsZLYSuU)
