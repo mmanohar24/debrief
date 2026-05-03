@@ -62,6 +62,7 @@ export async function POST(req: NextRequest) {
 
   if (!res.ok || !data.ok) {
     const errorText = data.error ?? JSON.stringify(data);
+    console.error("[slack/post-summary] Slack API error:", errorText, "| channel:", targetChannel);
     return NextResponse.json({ error: errorText }, { status: res.ok ? 400 : res.status });
   }
 
